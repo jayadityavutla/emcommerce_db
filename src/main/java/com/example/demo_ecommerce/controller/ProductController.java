@@ -1,14 +1,10 @@
 package com.example.demo_ecommerce.controller;
 
-import com.example.demo_ecommerce.dto.CategoryDTO;
-import com.example.demo_ecommerce.dto.ErrorDto;
-import com.example.demo_ecommerce.dto.FakeStoreCategoryDTO;
 import com.example.demo_ecommerce.exception.ProductNotFoundException;
-import com.example.demo_ecommerce.model.Category;
 import com.example.demo_ecommerce.model.Product;
+import com.example.demo_ecommerce.repository.projection.ProductProjection;
 import com.example.demo_ecommerce.service.ProductService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,48 +12,48 @@ import java.util.List;
 
 @RestController
 public class ProductController {
+    ProductService productService;
 
-    private ProductService productService;
-
-    public ProductController(ProductService productService){
+    public ProductController(ProductService productService) {
         this.productService = productService;
     }
 
-    @GetMapping("/testpath")
-    public String getTestMethod(){
-        return "Hello World";
-    }
-
     @PostMapping("/products")
-    public Product createProduct(@RequestBody Product product){
+    public Product createProduct(@RequestBody Product product) {
         return productService.createProduct(product);
     }
 
+//    @GetMapping("products/{id}")
+//    public Product getProductById(@RequestParam("id") int id) {
+//        return productService.getProductById(id);
+//    }
+
     @GetMapping("/products/{id}")
-    public ResponseEntity<Product> getProduct(@PathVariable Long productId) throws ProductNotFoundException {
-        Product curProduct = productService.getSingleProduct(productId);
-        ResponseEntity<Product> res = new ResponseEntity<>(curProduct, HttpStatus.OK);
+    public ResponseEntity<Product> getProduct(@PathVariable("id") Long productId) throws ProductNotFoundException {
+        // Whenever someone is doing a get request on /product/{id}
+        // Plz execute this method
+        Product currentProduct = productService.getSingleProduct(productId);
+        ResponseEntity<Product> res = new ResponseEntity<>(
+                currentProduct, HttpStatus.OK);
+
+        //throw new RuntimeException();
+        return res;
+        //throw new RuntimeException();
+        //return currentProduct;
+    }
+
+    @GetMapping("products/category/{id}")
+    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable("id") Long productId) throws ProductNotFoundException {
+        List<Product> productList = productService.getProductByCategory(productId);
+        ResponseEntity<List<Product>> res = new ResponseEntity<>(productList, HttpStatus.OK);
         return res;
     }
 
-    @GetMapping("/products")
-    public List<Product> getAllProducts(){
-        return productService.getAllProducts();
+    @GetMapping("products/category-custom/{id}")
+    public ResponseEntity<List<ProductProjection>> getProductsByCategoryIdProjection(@PathVariable("id") Long productId) throws ProductNotFoundException {
+        List<ProductProjection> productList = productService.getProductsByCategoryIdProjection(productId);
+        ResponseEntity<List<ProductProjection>> res = new ResponseEntity<>(productList, HttpStatus.OK);
+        return res;
     }
 
-    @PutMapping("/products/{id}")
-    public Product updateProduct(@PathVariable Long id, @RequestBody Product product) throws ProductNotFoundException{
-        return productService.updateProduct(id, product);
-    }
-
-    @DeleteMapping("/products/{id}")
-    public void deleteProduct(@PathVariable Long id){
-        productService.deleteProduct(id);
-    }
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleProductNotFoundException(Exception e){
-        ErrorDto errordto = new ErrorDto();
-        errordto.setMessage(e.getMessage());
-        return new ResponseEntity<>(errordto, HttpStatus.NOT_FOUND);
-    }
 }
