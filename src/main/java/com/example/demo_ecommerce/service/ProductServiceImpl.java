@@ -1,8 +1,10 @@
 package com.example.demo_ecommerce.service;
 
+import com.example.demo_ecommerce.dto.ProductDTO;
 import com.example.demo_ecommerce.exception.ProductNotFoundException;
 import com.example.demo_ecommerce.model.Category;
 import com.example.demo_ecommerce.model.Product;
+import com.example.demo_ecommerce.model.ProductMapper;
 import com.example.demo_ecommerce.repository.projection.ProductProjection;
 import org.springframework.stereotype.Service;
 import com.example.demo_ecommerce.repository.CategoryRepository;
@@ -15,8 +17,8 @@ import java.util.Optional;
 @Service("productService")
 public class ProductServiceImpl implements ProductService{
 
-    private ProductRepository productRepository;;
-    private CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;;
+    private final CategoryRepository categoryRepository;
 
     public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
@@ -25,22 +27,34 @@ public class ProductServiceImpl implements ProductService{
 
 
     @Override
-    public Product createProduct(Product product) {
+    public Product createProduct(Product product) throws ProductNotFoundException{
         // Lets say we are not passing category ID in our request body
-        Category cat = categoryRepository.findByTitle(product.getCategory().getTitle());
-        if(cat == null) {
-            // No category with our title in the database
-            Category newCat = new Category();
-            newCat.setTitle(product.getCategory().getTitle());
-            Category newRow = categoryRepository.save(newCat);
-            // newRow will have now catId
-            product.setCategory(newRow);
-        } else {
-            product.setCategory(cat);
+        Product response = new Product();
+        try{
+            Category cat = categoryRepository.findByTitle(product.getCategory().getTitle());
+            if(cat == null) {
+                // No category with our title in the database
+                Category newCat = new Category();
+                newCat.setTitle(product.getCategory().getTitle());
+                Category newRow = categoryRepository.save(newCat);
+                // newRow will have now catId
+                product.setCategory(newRow);
+            } else {
+                product.setCategory(cat);
+            }
+            response = productRepository.save(product);
+            }
+        catch(Exception e){
+            e.getStackTrace();
+            throw new ProductNotFoundException("Product not found");
         }
 
-        Product savedProduct = productRepository.save(product);
-        return savedProduct;
+        return response;
+    }
+
+    @Override
+    public List<Product> getAllProducts(){
+        return productRepository.findAllProducts();
     }
 
     @Override
@@ -60,12 +74,36 @@ public class ProductServiceImpl implements ProductService{
 
     @Override
     public List<Product> getProductByCategory(Long id){
-        List<Product> productList = productRepository.findProductByCategory(id);
-        return productList;
+        return productRepository.findProductByCategory(id);
     }
 
     @Override
     public List<ProductProjection> getProductsByCategoryIdProjection(Long id){
         return productRepository.getProductsByCategoryIdProjection(id);
+    }
+
+    @Override
+    public Product updateProduct(Long id, Product product) throws ProductNotFoundException{
+        Optional<Product> p = productRepository.findById(id);
+        if(p.isEmpty()) {
+            throw new ProductNotFoundException("Product not found");
+        }
+        Product existingDbProduct = p.get();
+        if(product.getTitle() != null){
+            existingDbProduct.setTitle(product.getTitle());
+        }
+        if(product.getDescription() != null){
+            existingDbProduct.setDescription(product.getDescription());
+        }
+        return productRepository.save(existingDbProduct);
+    }
+
+    @Override
+    public String deleteProductById(Long id) throws ProductNotFoundException{
+        int recCount = productRepository.deleteProductById(id);
+        if(recCount > 0){
+            return "Product deleted successfully";
+        }
+        throw new ProductNotFoundException("Product not found");
     }
 }
