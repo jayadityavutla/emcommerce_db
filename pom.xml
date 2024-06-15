@@ -11,6 +11,7 @@
 	<groupId>com.example</groupId>
 	<artifactId>demo_ecommerce</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>demo_ecommerce</name>
 	<description>demo_ecommerce</description>
 	<properties>
@@ -45,6 +46,11 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
+			<version>10.13.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
 			<version>10.13.0</version>
 		</dependency>
 		<dependency>

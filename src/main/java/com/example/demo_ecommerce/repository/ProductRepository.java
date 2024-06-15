@@ -17,8 +17,8 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Product save(Product product);
 
-    @Query(value = "select * from Product p", nativeQuery = true)
-    List<Product> findAllProducts();
+    //@Query(value = "select * from Product p", nativeQuery = true)
+    //List<Product> findAllProducts();
     //HQL
     @Query("select p from Product p where p.category.id = :categoryId")
     List<Product> findProductsByCategoryId(@Param("categoryId") Long categoryId);
